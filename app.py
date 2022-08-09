@@ -1,45 +1,112 @@
-import numpy as np
-import pandas as pd
-from flask import Flask, request, jsonify, render_template
-#from flask_ngrok import run_with_ngrok
+import streamlit as st 
+from PIL import Image
 import pickle
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 
-app = Flask(__name__)
-model = pickle.load(open('NLP_Project5.pkl','rb')) 
-from sklearn.feature_extraction.text import CountVectorizer
-cv = CountVectorizer(max_features = 1500)
-print(cv)
-corpus=pd.read_csv('corpus_dataset_project5.csv')
-corpus1=corpus['corpus'].tolist()
-X = cv.fit_transform(corpus1).toarray()
-#run_with_ngrok(app)
 
-@app.route('/')
-def home():
+
+
+st.set_option('deprecation.showfileUploaderEncoding', False)
+# Load the pickled model
+model = pickle.load(open('restuarantreviewnlp.pkl','rb'))   
+
+
+def review(text):
+  dataset = pd.read_csv('Restaurant_Reviews.tsv', delimiter="\t", quoting=3)
+  # First step: cleaning Text and removing number and punctuation marks.
+  # Cleaning the texts for all review using for loop
+  import re
   
-    return render_template("index.html")
+  import nltk
   
-@app.route('/predict',methods=['GET'])
-def predict():
-    
-    
-    '''
-    For rendering results on HTML GUI
-    '''
-    text = request.args.get('text')
-    text=[text]
-    input_data = cv.transform(text).toarray()
-    
-    
-    prediction = model.predict(input_data)
-    if prediction==1:
-      message="Positive"
-    else:
-      message="Negative"
-    
-        
-    return render_template('index.html', prediction_text='Given Review is : {}'.format(message))
+  
+  nltk.download('stopwords')
+  from nltk.corpus import stopwords
+  from nltk.stem.porter import PorterStemmer
+  corpus = []
+  for i in range(0, 1000):
+    review = re.sub('[^a-zA-Z]', ' ', dataset['Review'][i])
+    review = review.lower()
+    review = review.split()
+    ps = PorterStemmer()
+    review = [ps.stem(word) for word in review if not word in set(stopwords.words('english'))]
+    review = ' '.join(review)
+    #print(review)
+    corpus.append(review)
+  # Creating the Bag of Words model
+  from sklearn.feature_extraction.text import CountVectorizer
+  cv = CountVectorizer(max_features = 1500)
+  #print(cv)
+  X = cv.fit_transform(corpus).toarray()
+  import re
+  review = re.sub('[^a-zA-Z]', ' ', text)
+  review=review.lower()
+  print(review)
+  # Third step: Removing stop words like 'this, the'
+  import nltk
+  nltk.download('stopwords')
+  from nltk.corpus import stopwords
+  review = review.split()
+  print(review)
+  # Third step: Removing stop words like 'this, the'
+   # set function is generally used for long article to fastem process
+  review1 = [word for word in review if not word in set(stopwords.words('english'))]
+  print(review1)
+  # Fourth step: converting stemming words
+  from nltk.stem.porter import PorterStemmer
+  ps = PorterStemmer()
+  review = [ps.stem(word) for word in review1 if not word in set(stopwords.words('english'))]
+  print(review)
+  # joining these words of list
+  review2 = ' '.join(review)
+  print(review2)
+  # Creating the Bag of Words model
+  
+  X = cv.transform(review).toarray()
+  input_pred = model.predict(X)
+  input_pred = input_pred.astype(int)
+  print(input_pred)
+  if input_pred[0]==1:
+    result= "Review is Positive"
+  else:
+    result="Review is negative" 
 
+ 
+    
+  return result
+html_temp = """
+   <div class="" style="background-color:blue;" >
+   <div class="clearfix">           
+   <div class="col-md-12">
+   <center><p style="font-size:40px;color:white;margin-top:10px;">Poornima Institute of Engineering & Technology</p></center> 
+   <center><p style="font-size:30px;color:white;margin-top:10px;">Department of Computer Engineering</p></center> 
+   <center><p style="font-size:25px;color:white;margin-top:10px;"Summer Internship 2022</p></center> 
+   </div>
+   </div>
+   </div>
+   """
+st.markdown(html_temp,unsafe_allow_html=True)
+st.header("Restaurant Review System ")
+  
+  
+text = st.text_area("Writre Review of Restaurant")
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if st.button("Review Analysis"):
+  result=review(text)
+  st.success('Model has predicted {}'.format(result))
+      
+if st.button("About"):
+  st.subheader("Developed by ISHU")
+  st.subheader(" Department of Computer Engineering")
+html_temp = """
+   <div class="" style="background-color:white;" >
+   <div class="clearfix">           
+   <div class="col-md-12">
+   <center><p style="font-size:20px;color:white;margin-top:10px;">Summer Internship 2022 Project Deployment</p></center> 
+   </div>
+   </div>
+   </div>
+   """
+st.markdown(html_temp,unsafe_allow_html=True)
