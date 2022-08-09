@@ -4,15 +4,9 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
-
-
-
 st.set_option('deprecation.showfileUploaderEncoding', False)
 # Load the pickled model
 model = pickle.load(open('restuarantreviewnlp.pkl','rb'))   
-
-
 def review(text):
   dataset = pd.read_csv('Restaurant_Reviews.tsv', delimiter="\t", quoting=3)
   # First step: cleaning Text and removing number and punctuation marks.
@@ -68,45 +62,12 @@ def review(text):
   input_pred = model.predict(X)
   input_pred = input_pred.astype(int)
   print(input_pred)
-  if input_pred[0]==1:
+  if input_pred==1:
     result= "Review is Positive"
   else:
     result="Review is negative" 
+      return render_template('index.html', prediction_text='Given Review is : {}'.format(message))
 
- 
-    
-  return result
-html_temp = """
-   <div class="" style="background-color:blue;" >
-   <div class="clearfix">           
-   <div class="col-md-12">
-   <center><p style="font-size:40px;color:white;margin-top:10px;">Poornima Institute of Engineering & Technology</p></center> 
-   <center><p style="font-size:30px;color:white;margin-top:10px;">Department of Computer Engineering</p></center> 
-   <center><p style="font-size:25px;color:white;margin-top:10px;"Summer Internship 2022</p></center> 
-   </div>
-   </div>
-   </div>
-   """
-st.markdown(html_temp,unsafe_allow_html=True)
-st.header("Restaurant Review System ")
-  
-  
-text = st.text_area("Writre Review of Restaurant")
 
-if st.button("Review Analysis"):
-  result=review(text)
-  st.success('Model has predicted {}'.format(result))
-      
-if st.button("About"):
-  st.subheader("Developed by ISHU")
-  st.subheader(" Department of Computer Engineering")
-html_temp = """
-   <div class="" style="background-color:white;" >
-   <div class="clearfix">           
-   <div class="col-md-12">
-   <center><p style="font-size:20px;color:white;margin-top:10px;">Summer Internship 2022 Project Deployment</p></center> 
-   </div>
-   </div>
-   </div>
-   """
-st.markdown(html_temp,unsafe_allow_html=True)
+if __name__ == "__main__":
+    app.run(debug=True)
